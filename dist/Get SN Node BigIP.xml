@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?><unload unload_date="2020-02-17 14:50:40">
+<sys_remote_update_set action="INSERT_OR_UPDATE">
+<application display_value="Global">global</application>
+<application_name>Global</application_name>
+<application_scope>global</application_scope>
+<application_version/>
+<collisions/>
+<commit_date/>
+<deleted/>
+<description>Use the ID generated to edit the cookie and switch the nodes.</description>
+<inserted/>
+<name>Get SN Node BigIP</name>
+<origin_sys_id/>
+<parent display_value=""/>
+<release_date/>
+<remote_base_update_set display_value=""/>
+<remote_parent_id/>
+<remote_sys_id>0c0a1c911b0f84908ed631d7dc4bcba4</remote_sys_id>
+<state>loaded</state>
+<summary/>
+<sys_class_name>sys_remote_update_set</sys_class_name>
+<sys_created_by>admin</sys_created_by>
+<sys_created_on>2020-02-17 14:50:39</sys_created_on>
+<sys_id>816074151b8f84908ed631d7dc4bcbc0</sys_id>
+<sys_mod_count>0</sys_mod_count>
+<sys_updated_by>admin</sys_updated_by>
+<sys_updated_on>2020-02-17 14:50:39</sys_updated_on>
+<update_set display_value=""/>
+<update_source display_value=""/>
+<updated/>
+</sys_remote_update_set>
+<sys_update_xml action="INSERT_OR_UPDATE">
+<action>INSERT_OR_UPDATE</action>
+<application display_value="Global">global</application>
+<category>customer</category>
+<comments/>
+<name>sys_script_include_d26ad4d11b0f84908ed631d7dc4bcbf7</name>
+<payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;record_update table="sys_script_include"&gt;&lt;sys_script_include action="INSERT_OR_UPDATE"&gt;&lt;access&gt;package_private&lt;/access&gt;&lt;active&gt;true&lt;/active&gt;&lt;api_name&gt;global.GetSNNodeHelper&lt;/api_name&gt;&lt;caller_access/&gt;&lt;client_callable&gt;true&lt;/client_callable&gt;&lt;description&gt;This script is used to get the Big IP that can be used to switch between ServiceNow nodes.&lt;/description&gt;&lt;name&gt;GetSNNodeHelper&lt;/name&gt;&lt;script&gt;&lt;![CDATA[var GetSNNodeHelper = Class.create();
+GetSNNodeHelper.prototype = Object.extendsObject(AbstractAjaxProcessor, {
+
+    //ServiceNow Adaptation of this plugin - https://github.com/arnoudkooi/ServiceNow-Utils/blob/master/background.js
+    getNodeBigIP: function() {
+        try {
+            var url = gs.getProperty('glide.servlet.uri');
+            var nodeId = '',
+                nodeName = '';
+            var encodedPort = '';
+            var encodedIP = 0;
+
+            var getNode = new GlideRecord('sys_cluster_state');
+            getNode.addEncodedQuery('sys_id=' + this.getParameter('sysparm_nodeID'));
+            getNode.setLimit(1);
+            getNode.query();
+            if (getNode.next()) {
+                nodeId = getNode.getValue('node_id');
+
+                var xmlDoc = new XMLDocument2();
+                xmlDoc.parseXML(getNode.getValue('stats'));
+                var port = (xmlDoc.getNodeText("//servlet.port"));
+                encodedPort = Math.floor(port / 256) + (port % 256) * 256;
+
+                var getNodeName = new GlideRecord('v_cluster_nodes');
+                getNodeName.addEncodedQuery('node=' + getNode.getValue('sys_id'));
+                getNodeName.setLimit(1);
+                getNodeName.query();
+                if (getNodeName.next()) {
+                    nodeName = getNodeName.getValue('name');
+                }
+            }
+
+            var request = new GlideHTTPRequest(url + 'stats.do');
+            var response = request.get();
+            var statsDo = response.getBody();
+            var ipArr = statsDo
+                .match(/IP address: ([\s\S]*?)\&lt;br\/&gt;/g)[0]
+                .replace('IP address: ', '')
+                .replace('&lt;br /&gt;', '')
+                .split('.');
+
+            var nodeArr = nodeName.split(".");
+            var ip34 = nodeArr[0].replace("app", ""); //ie: 28125
+            var ipSegments = [ipArr[0], ipArr[1], Number(ip34.slice(0, -3)), Number(ip34.slice(3))];
+
+
+            for (var i = 0; i &lt; ipSegments.length; i++) {
+                var n = (ipSegments[i] * Math.pow(256, i));
+                encodedIP += n;
+            }
+
+            var encodeBIGIP = encodedIP + '.' + encodedPort + '.0000';
+            return encodeBIGIP;
+        } catch (err) {
+            gs.log('Error while creating Big IP:' + err);
+            return 'Error';
+        }
+    },
+    type: 'GetSNNodeHelper'
+});]]&gt;&lt;/script&gt;&lt;sys_class_name&gt;sys_script_include&lt;/sys_class_name&gt;&lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;&lt;sys_created_on&gt;2020-02-17 13:16:28&lt;/sys_created_on&gt;&lt;sys_customer_update&gt;false&lt;/sys_customer_update&gt;&lt;sys_id&gt;d26ad4d11b0f84908ed631d7dc4bcbf7&lt;/sys_id&gt;&lt;sys_mod_count&gt;3&lt;/sys_mod_count&gt;&lt;sys_name&gt;GetSNNodeHelper&lt;/sys_name&gt;&lt;sys_package display_value="Global" source="global"&gt;global&lt;/sys_package&gt;&lt;sys_policy/&gt;&lt;sys_replace_on_upgrade&gt;false&lt;/sys_replace_on_upgrade&gt;&lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;&lt;sys_update_name&gt;sys_script_include_d26ad4d11b0f84908ed631d7dc4bcbf7&lt;/sys_update_name&gt;&lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;&lt;sys_updated_on&gt;2020-02-17 14:47:48&lt;/sys_updated_on&gt;&lt;/sys_script_include&gt;&lt;/record_update&gt;</payload>
+<payload_hash>-1958037324</payload_hash>
+<remote_update_set display_value="Get SN Node BigIP">816074151b8f84908ed631d7dc4bcbc0</remote_update_set>
+<replace_on_upgrade>false</replace_on_upgrade>
+<sys_created_by>admin</sys_created_by>
+<sys_created_on>2020-02-17 14:50:39</sys_created_on>
+<sys_id>096074151b8f84908ed631d7dc4bcbc0</sys_id>
+<sys_mod_count>0</sys_mod_count>
+<sys_recorded_at>170539e9b020000001</sys_recorded_at>
+<sys_updated_by>admin</sys_updated_by>
+<sys_updated_on>2020-02-17 14:50:39</sys_updated_on>
+<table/>
+<target_name>GetSNNodeHelper</target_name>
+<type>Script Include</type>
+<update_domain>global</update_domain>
+<update_guid>0bbfec15d38f84905d7e899b8acb9a7f</update_guid>
+<update_guid_history>0bbfec15d38f84905d7e899b8acb9a7f:-1958037324,95feecd1548f8490d5ace282ebc54d22:-1149329555,14ee2cd11b8f8490d176f0b9d7c5fbe8:2058582674,dddad891470f84901cb38d4b5b1dd72d:1190800112</update_guid_history>
+<update_set display_value=""/>
+<view/>
+</sys_update_xml>
+<sys_update_xml action="INSERT_OR_UPDATE">
+<action>INSERT_OR_UPDATE</action>
+<application display_value="Global">global</application>
+<category>customer</category>
+<comments/>
+<name>sys_ui_context_menu_15f998911b0f84908ed631d7dc4bcbce</name>
+<payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;record_update sys_domain="global" table="sys_ui_context_menu"&gt;&lt;sys_ui_context_menu action="INSERT_OR_UPDATE"&gt;&lt;action_script&gt;&lt;![CDATA[/**
+ * Script executed on the Client for this menu action
+ *
+ * The following variables are available to the script:
+ *    'g_list' the GlideList2 that the script is running against (only valid for List context menus)
+ *    'g_fieldName' the name of the field that the context menu is running against (only valid for List context menus)
+ *    'g_sysId' the sys_id of the row or form that the script is running against
+ *    'rowSysId' is also set to the sys_id of the row to support legacy actions, but g_sysId is preferred
+ */
+runContextAction();
+
+function runContextAction() {
+    var glideAjax = new GlideAjax('GetSNNodeHelper');
+    glideAjax.addParam('sysparm_name', 'getNodeBigIP');
+    glideAjax.addParam('sysparm_nodeID', g_sysId); //sys_id
+    glideAjax.getXMLWait();
+    copyToClipboard(glideAjax.getAnswer());
+}]]&gt;&lt;/action_script&gt;&lt;active&gt;true&lt;/active&gt;&lt;comments/&gt;&lt;condition&gt;gs.hasRole("admin")&lt;/condition&gt;&lt;do_not_cache&gt;false&lt;/do_not_cache&gt;&lt;dynamic_actions_script&gt;&lt;![CDATA[/** 
+ * This server-side script is used to dynamically create actions for the context menu, such as the list of available templates 
+ * 
+ * The following variables are available to the script: 
+ *    'g_tableName' the name of the current table 
+ *    'g_listId' the id of the list we are building the context menu for 
+ *    'g_itemName' the name of the UI Context Menu item we are building 
+ *    'g_itemOrder' the order defined in the UI Context Menu item we are building 
+ * 
+ * Add items to the context menu by calling: 
+ *    g_contextMenu.addAction(item_id, label, script_string, order); 
+ */ 
+]]&gt;&lt;/dynamic_actions_script&gt;&lt;menu&gt;list_row&lt;/menu&gt;&lt;name&gt;Copy BigIP&lt;/name&gt;&lt;on_show_script&gt;&lt;![CDATA[/**
+ * This client-side script is used to dynamically change the context menu before it is displayed.
+ * It is called before showing the context menu if the Run onShow script flag is checked.
+ *
+ * The following variables are available to the script:
+ *    'g_menu' the context menu that is about to be shown
+ *    'g_item' the current context menu item
+ *    'g_list' the GlideList2 that the script is running against (only valid for List context menus)
+ *    'g_fieldName' the name of the field that the context menu is running against (only valid for List context menus)
+ *    'g_fieldLabel' the label of the field that the context menu is running against (only valid for List context menus)
+ *    'g_sysId' the sys_id of the row or form that the script is running against
+ */
+ 
+]]&gt;&lt;/on_show_script&gt;&lt;order&gt;1500&lt;/order&gt;&lt;parent/&gt;&lt;run_on_show_script&gt;false&lt;/run_on_show_script&gt;&lt;sys_class_name&gt;sys_ui_context_menu&lt;/sys_class_name&gt;&lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;&lt;sys_created_on&gt;2020-02-17 13:14:27&lt;/sys_created_on&gt;&lt;sys_customer_update&gt;false&lt;/sys_customer_update&gt;&lt;sys_domain&gt;global&lt;/sys_domain&gt;&lt;sys_domain_path&gt;/&lt;/sys_domain_path&gt;&lt;sys_id&gt;15f998911b0f84908ed631d7dc4bcbce&lt;/sys_id&gt;&lt;sys_mod_count&gt;3&lt;/sys_mod_count&gt;&lt;sys_name&gt;Copy BigIP&lt;/sys_name&gt;&lt;sys_overrides/&gt;&lt;sys_package display_value="Global" source="global"&gt;global&lt;/sys_package&gt;&lt;sys_policy/&gt;&lt;sys_replace_on_upgrade&gt;false&lt;/sys_replace_on_upgrade&gt;&lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;&lt;sys_update_name&gt;sys_ui_context_menu_15f998911b0f84908ed631d7dc4bcbce&lt;/sys_update_name&gt;&lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;&lt;sys_updated_on&gt;2020-02-17 14:48:49&lt;/sys_updated_on&gt;&lt;table&gt;sys_cluster_state&lt;/table&gt;&lt;track_selected&gt;false&lt;/track_selected&gt;&lt;type&gt;action&lt;/type&gt;&lt;/sys_ui_context_menu&gt;&lt;/record_update&gt;</payload>
+<payload_hash>160515803</payload_hash>
+<remote_update_set display_value="Get SN Node BigIP">816074151b8f84908ed631d7dc4bcbc0</remote_update_set>
+<replace_on_upgrade>false</replace_on_upgrade>
+<sys_created_by>admin</sys_created_by>
+<sys_created_on>2020-02-17 14:50:39</sys_created_on>
+<sys_id>416074151b8f84908ed631d7dc4bcbc1</sys_id>
+<sys_mod_count>0</sys_mod_count>
+<sys_recorded_at>170539f89460000001</sys_recorded_at>
+<sys_updated_by>admin</sys_updated_by>
+<sys_updated_on>2020-02-17 14:50:39</sys_updated_on>
+<table>sys_cluster_state</table>
+<target_name>Copy BigIP</target_name>
+<type>Context Menu</type>
+<update_domain>global</update_domain>
+<update_guid>c2ff64153c8f8490b8a729e9fa00088d</update_guid>
+<update_guid_history>c2ff64153c8f8490b8a729e9fa00088d:160515803,32be20d1178f8490781f4bdea64c5c97:-866241562,591bd0155f0f8490b86496a5ccee1411:-1612971902,775ad0d9498b8490c3a2f58a292fecf5:1624994118</update_guid_history>
+<update_set display_value=""/>
+<view/>
+</sys_update_xml>
+</unload>
